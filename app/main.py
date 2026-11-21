@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from app.database.db import Base, engine
+from app.modules.admin.routers import router as admin_router
 
 # Routers
 from app.modules.users.routers import router as users_router
@@ -34,3 +35,4 @@ def health():
 
 
 app.include_router(users_router)
+app.include_router(admin_router)
