@@ -1,11 +1,124 @@
-from sqlalchemy import String
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import ForeignKey, Integer, String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.db import Base
 
 
-class Test(Base):
-    __tablename__ = "test"
+# -------------------- users -------------------- #
+class User(Base):
+    __tablename__ = "users"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    user_id: Mapped[int] = mapped_column(primary_key=True)
+    email: Mapped[str] = mapped_column(String(255), unique=True, index=True)
+    first_name: Mapped[str] = mapped_column(String(100))
+    last_name: Mapped[str] = mapped_column(String(100))
+    country: Mapped[str] = mapped_column(String(100))
+    affiliation: Mapped[str] = mapped_column(String(100))
+    phone_number: Mapped[str] = mapped_column(String(100))
+
+    # Relationships
+    author_profile: Mapped[Author | None] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+    reviewer_profile: Mapped[Reviewer | None] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+
+
+class Author(Base):
+    __tablename__ = "authors"
+
+    author_id: Mapped[int] = mapped_column(
+        ForeignKey("users.user_id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    orcid: Mapped[str | None] = mapped_column(String(12), nullable=True)
+
+    # Relationships
+    user: Mapped[User] = relationship(back_populates="author_profile")
+    author_research_area: Mapped[list[AuthorResearchArea]] = relationship(
+        back_populates="author", cascade="all, delete-orphan"
+    )
+
+
+class AuthorResearchArea(Base):
+    __tablename__ = "author_research_areas"
+
+    author_id: Mapped[int] = mapped_column(
+        ForeignKey("authors.author_id", ondelete="CASCADE"), primary_key=True
+    )
+    research_area_id: Mapped[int] = mapped_column(
+        ForeignKey("research_areas.research_area_id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+
+    # Relationships
+    author: Mapped[Author] = relationship(back_populates="author_research_area")
+    research_area: Mapped[ResearchArea] = relationship(
+        back_populates="author_research_area"
+    )
+
+
+class ResearchArea(Base):
+    __tablename__ = "research_areas"
+
+    research_area_id: Mapped[int] = mapped_column(primary_key=True)
+    label: Mapped[str] = mapped_column(String(100), unique=True)
+
+    # Relationships
+    author_research_area: Mapped[list[AuthorResearchArea]] = relationship(
+        back_populates="research_area"
+    )
+
+
+class Reviewer(Base):
+    __tablename__ = "reviewers"
+
+    reviewer_id: Mapped[int] = mapped_column(
+        ForeignKey("users.user_id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    years_of_experience: Mapped[int] = mapped_column(Integer)
+
+    # Relationships
+    user: Mapped[User] = relationship(back_populates="reviewer_profile")
+    reviewer_expertise_area: Mapped[list[ReviewerExpertiseArea]] = relationship(
+        back_populates="reviewer", cascade="all, delete-orphan"
+    )
+
+
+class ReviewerExpertiseArea(Base):
+    __tablename__ = "reviewer_expertise_areas"
+
+    reviewer_id: Mapped[int] = mapped_column(
+        ForeignKey("reviewers.reviewer_id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    expertise_area_id: Mapped[int] = mapped_column(
+        ForeignKey("expertise_areas.expertise_area_id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+
+    # Relationships
+    reviewer: Mapped[Reviewer] = relationship(back_populates="reviewer_expertise_area")
+    expertise_area: Mapped[ExpertiseArea] = relationship(
+        back_populates="reviewer_expertise_area"
+    )
+
+
+class ExpertiseArea(Base):
+    __tablename__ = "expertise_areas"
+
+    expertise_area_id: Mapped[int] = mapped_column(primary_key=True)
+    label: Mapped[str] = mapped_column(String(100), unique=True)
+
+    # Relationships
+    reviewer_expertise_area: Mapped[list[ReviewerExpertiseArea]] = relationship(
+        back_populates="expertise_area"
+    )
+
+
+# -------------------- conferences -------------------- #
+# -------------------- papers -------------------- #
