@@ -18,6 +18,10 @@ up:
 upd:
     docker compose up -d
 
+# Stop db
+stop:
+    docker compose down
+
 # Stop and wipe DB volumes (use when models/tables change)
 down:
     docker compose down -v
