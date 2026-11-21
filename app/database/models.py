@@ -1,4 +1,4 @@
-from sqlalchemy import ForeignKey, Integer, String
+from sqlalchemy import CheckConstraint, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.db import Base
@@ -34,7 +34,7 @@ class Author(Base):
         ForeignKey("users.user_id", ondelete="CASCADE"),
         primary_key=True,
     )
-    orcid: Mapped[str | None] = mapped_column(String(12), nullable=True)
+    orcid: Mapped[str | None] = mapped_column(String(19), nullable=True)
 
     # Relationships
     user: Mapped[User] = relationship(back_populates="author_profile")
@@ -81,6 +81,13 @@ class Reviewer(Base):
         primary_key=True,
     )
     years_of_experience: Mapped[int] = mapped_column(Integer)
+
+    __table_args__ = (
+        CheckConstraint(
+            "years_of_experience >= 0",
+            name="check_if_xp_years_is_nonnegative",
+        ),
+    )
 
     # Relationships
     user: Mapped[User] = relationship(back_populates="reviewer_profile")
