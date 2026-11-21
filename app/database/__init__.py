@@ -1,1 +1,19 @@
-from app.database.models import Test  # noqa: F401
+from app.database.models import (
+    Author,
+    AuthorResearchArea,
+    ExpertiseArea,
+    ResearchArea,
+    Reviewer,
+    ReviewerExpertiseArea,
+    User,
+)
+
+__all__ = [
+    "Author",
+    "AuthorResearchArea",
+    "ExpertiseArea",
+    "ResearchArea",
+    "Reviewer",
+    "ReviewerExpertiseArea",
+    "User",
+]
