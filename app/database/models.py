@@ -14,7 +14,7 @@ class User(Base):
     last_name: Mapped[str] = mapped_column(String(100))
     country: Mapped[str] = mapped_column(String(100))
     affiliation: Mapped[str] = mapped_column(String(100))
-    phone_number: Mapped[str] = mapped_column(String(100))
+    phone_number: Mapped[str] = mapped_column(String(100), unique=True)
 
     # Relationships
     author_profile: Mapped[Author | None] = relationship(

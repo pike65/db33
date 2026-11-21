@@ -5,6 +5,9 @@ from fastapi import FastAPI
 
 from app.database.db import Base, engine
 
+# Routers
+from app.modules.users.routers import router as users_router
+
 logging.basicConfig(level=logging.INFO)
 
 
@@ -28,3 +31,6 @@ app = FastAPI(
 @app.get("/")
 def health():
     return {"health": "ok"}
+
+
+app.include_router(users_router)
