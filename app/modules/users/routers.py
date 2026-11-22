@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, status
 from sqlalchemy.exc import IntegrityError
 
+from app.core.exceptions import InvalidAreaError
 from app.database.db import DBSession
 from app.modules.users import service
 from app.modules.users.schemas import (
@@ -15,7 +16,7 @@ router = APIRouter(prefix="/users", tags=["users"])
 def create_new_user(db: DBSession, payload: UserCreate):
     try:
         return service.create_user_with_specializations(db, payload)
-    except service.InvalidAreaError as exc:
+    except InvalidAreaError as exc:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(exc),

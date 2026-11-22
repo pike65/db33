@@ -2,6 +2,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.core.exceptions import InvalidAreaError
 from app.database.models import (
     Author,
     AuthorResearchArea,
@@ -12,10 +13,6 @@ from app.database.models import (
     User,
 )
 from app.modules.users.schemas import UserCreate
-
-
-class InvalidAreaError(Exception):
-    pass
 
 
 def _validate_area_ids(
