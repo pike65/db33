@@ -8,3 +8,7 @@ class AppError(Exception):
 
 class InvalidAreaError(AppError):
     pass
+
+
+class NotFoundError(AppError):
+    pass

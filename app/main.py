@@ -34,5 +34,5 @@ def health():
     return {"health": "ok"}
 
 
-app.include_router(users_router)
 app.include_router(admin_router)
+app.include_router(users_router)

@@ -1,0 +1,15 @@
+{
+  "email": "neo@abc.com",
+  "first_name": "Thomas",
+  "last_name": "Anderson",
+  "country": "USA",
+  "affiliation": "The One",
+  "phone_number": "12341234",
+  "author": {
+    "orcid": null,
+    "research_area_ids": [
+      1, 2
+    ]
+  },
+  "reviewer": null
+}

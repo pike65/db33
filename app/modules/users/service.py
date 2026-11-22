@@ -2,7 +2,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.core.exceptions import InvalidAreaError
+from app.core.exceptions import InvalidAreaError, NotFoundError
 from app.database.models import (
     Author,
     AuthorResearchArea,
@@ -88,3 +88,10 @@ def create_user_with_specializations(db: Session, data: UserCreate) -> User:
 
 def get_all_users_from_db(db: Session) -> list[User]:
     return list(db.scalars(select(User)).all())
+
+
+def get_user_by_id_from_db(db: Session, user_id: int) -> User:
+    user = db.scalar(select(User).where(User.user_id == user_id))
+    if not user:
+        raise NotFoundError("User not found.")
+    return user
