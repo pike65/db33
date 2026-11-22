@@ -16,12 +16,12 @@ class UserBase(BaseModel):
 # -------------------- input -------------------- #
 class AuthorCreate(BaseModel):
     orcid: Annotated[str | None, Field(min_length=19, max_length=19)] = None
-    research_area_ids: list[int] = Field(default_factory=list)
+    research_area_ids: list[int] = Field(default_factory=list, min_length=1)
 
 
 class ReviewerCreate(BaseModel):
     years_of_experience: int = Field(..., ge=0)
-    expertise_area_ids: list[int] = Field(default_factory=list)
+    expertise_area_ids: list[int] = Field(default_factory=list, min_length=1)
 
 
 class UserCreate(UserBase):

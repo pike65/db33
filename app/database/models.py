@@ -40,7 +40,7 @@ class Author(Base):
 
     # Relationships
     user: Mapped[User] = relationship(back_populates="author_profile")
-    author_research_area: Mapped[list[AuthorResearchArea]] = relationship(
+    author_research_areas: Mapped[list[AuthorResearchArea]] = relationship(
         back_populates="author", cascade="all, delete-orphan"
     )
 
@@ -57,9 +57,9 @@ class AuthorResearchArea(Base):
     )
 
     # Relationships
-    author: Mapped[Author] = relationship(back_populates="author_research_area")
+    author: Mapped[Author] = relationship(back_populates="author_research_areas")
     research_area: Mapped[ResearchArea] = relationship(
-        back_populates="author_research_area"
+        back_populates="author_research_areas"
     )
 
 
@@ -70,8 +70,8 @@ class ResearchArea(Base):
     label: Mapped[str] = mapped_column(String(100), unique=True)
 
     # Relationships
-    author_research_area: Mapped[list[AuthorResearchArea]] = relationship(
-        back_populates="research_area"
+    author_research_areas: Mapped[list[AuthorResearchArea]] = relationship(
+        back_populates="research_area", cascade="all, delete-orphan"
     )
 
 
@@ -93,7 +93,10 @@ class Reviewer(Base):
 
     # Relationships
     user: Mapped[User] = relationship(back_populates="reviewer_profile")
-    reviewer_expertise_area: Mapped[list[ReviewerExpertiseArea]] = relationship(
+    reviewer_expertise_areas: Mapped[list[ReviewerExpertiseArea]] = relationship(
+        back_populates="reviewer", cascade="all, delete-orphan"
+    )
+    maintained_conferences: Mapped[list[ReviewerMaintainsConference]] = relationship(
         back_populates="reviewer", cascade="all, delete-orphan"
     )
 
@@ -111,9 +114,9 @@ class ReviewerExpertiseArea(Base):
     )
 
     # Relationships
-    reviewer: Mapped[Reviewer] = relationship(back_populates="reviewer_expertise_area")
+    reviewer: Mapped[Reviewer] = relationship(back_populates="reviewer_expertise_areas")
     expertise_area: Mapped[ExpertiseArea] = relationship(
-        back_populates="reviewer_expertise_area"
+        back_populates="reviewer_expertise_areas"
     )
 
 
@@ -124,8 +127,8 @@ class ExpertiseArea(Base):
     label: Mapped[str] = mapped_column(String(100), unique=True)
 
     # Relationships
-    reviewer_expertise_area: Mapped[list[ReviewerExpertiseArea]] = relationship(
-        back_populates="expertise_area"
+    reviewer_expertise_areas: Mapped[list[ReviewerExpertiseArea]] = relationship(
+        back_populates="expertise_area", cascade="all, delete-orphan"
     )
 
 
@@ -154,6 +157,9 @@ class Conference(Base):
     hosts: Mapped[list[Host]] = relationship(
         back_populates="conference", cascade="all, delete-orphan"
     )
+    maintaining_reviewers: Mapped[list[ReviewerMaintainsConference]] = relationship(
+        back_populates="conference", cascade="all, delete-orphan"
+    )
 
 
 class Host(Base):
@@ -169,3 +175,21 @@ class Host(Base):
 
 
 # -------------------- papers -------------------- #
+
+
+# -------------------- entity relationships -------------------- #
+class ReviewerMaintainsConference(Base):
+    __tablename__ = "maintained_conferences"
+
+    reviewer_id: Mapped[int] = mapped_column(
+        ForeignKey("reviewers.reviewer_id", ondelete="CASCADE"), primary_key=True
+    )
+    conference_id: Mapped[int] = mapped_column(
+        ForeignKey("conferences.conference_id", ondelete="CASCADE"), primary_key=True
+    )
+
+    # Relationships
+    reviewer: Mapped[Reviewer] = relationship(back_populates="maintained_conferences")
+    conference: Mapped[Conference] = relationship(
+        back_populates="maintaining_reviewers"
+    )
