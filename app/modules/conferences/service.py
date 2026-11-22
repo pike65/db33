@@ -31,8 +31,11 @@ def add_new_conference_to_db(db: Session, data: ConferenceCreate) -> Conference:
     return conference
 
 
-def get_all_conferences_from_db(db: Session) -> list[Conference]:
-    return list(db.scalars(select(Conference)).all())
+def get_all_conferences_from_db(db: Session, skip: int, limit: int) -> list[Conference]:
+    query = (
+        select(Conference).order_by(Conference.conference_id).offset(skip).limit(limit)
+    )
+    return list(db.scalars(query).all())
 
 
 def get_conference_by_id_from_db(db: Session, conference_id: int) -> Conference:

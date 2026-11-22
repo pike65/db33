@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, Query, status
 from sqlalchemy.exc import IntegrityError
 
 from app.core.exceptions import NotFoundError
@@ -25,8 +25,12 @@ def create_new_conference(db: DBSession, payload: ConferenceCreate):
 @router.get(
     "/", response_model=list[ConferenceResponse], status_code=status.HTTP_200_OK
 )
-def get_all_conferences(db: DBSession):
-    return service.get_all_conferences_from_db(db)
+def get_all_conferences(
+    db: DBSession,
+    skip: int = Query(default=0, ge=0),
+    limit: int = Query(default=100, ge=1, le=100),
+):
+    return service.get_all_conferences_from_db(db, skip=skip, limit=limit)
 
 
 @router.get(

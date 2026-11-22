@@ -86,8 +86,9 @@ def create_user_with_specializations(db: Session, data: UserCreate) -> User:
     return user
 
 
-def get_all_users_from_db(db: Session) -> list[User]:
-    return list(db.scalars(select(User)).all())
+def get_all_users_from_db(db: Session, skip: int = 0, limit: int = 100) -> list[User]:
+    query = select(User).order_by(User.user_id).offset(skip).limit(limit)
+    return list(db.scalars(query).all())
 
 
 def get_user_by_id_from_db(db: Session, user_id: int) -> User:
