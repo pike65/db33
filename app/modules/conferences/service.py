@@ -3,12 +3,23 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import NotFoundError
-from app.database.models import Conference, Host
+from app.database.models import Conference, Host, Reviewer, ReviewerMaintainsConference
 from app.modules.conferences.schemas import ConferenceCreate
 
 
 def add_new_conference_to_db(db: Session, data: ConferenceCreate) -> Conference:
-    conference = Conference(**data.model_dump(exclude={"hosts"}))
+    reviewer_ids = list(dict.fromkeys(data.reviewer_ids))
+
+    existing_reviewer_ids = set(
+        db.scalars(
+            select(Reviewer.reviewer_id).where(Reviewer.reviewer_id.in_(reviewer_ids))
+        ).all()
+    )
+    missing_ids = [rid for rid in reviewer_ids if rid not in existing_reviewer_ids]
+    if missing_ids:
+        raise NotFoundError(f"Reviewers not found: {missing_ids}")
+
+    conference = Conference(**data.model_dump(exclude={"hosts", "reviewer_ids"}))
     db.add(conference)
 
     try:
@@ -19,6 +30,14 @@ def add_new_conference_to_db(db: Session, data: ConferenceCreate) -> Conference:
                 Host(
                     conference_id=conference.conference_id,
                     host_name=host_name,
+                )
+            )
+
+        for reviewer_id in reviewer_ids:
+            db.add(
+                ReviewerMaintainsConference(
+                    conference_id=conference.conference_id,
+                    reviewer_id=reviewer_id,
                 )
             )
 

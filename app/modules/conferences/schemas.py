@@ -20,7 +20,7 @@ class ConferenceBase(BaseModel):
 
 # -------------------- input -------------------- #
 class ConferenceCreate(ConferenceBase):
-    pass
+    reviewer_ids: list[int] = Field(..., min_length=1)
 
 
 # -------------------- output -------------------- #

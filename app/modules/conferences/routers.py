@@ -15,6 +15,11 @@ router = APIRouter(prefix="/conferences", tags=["conferences"])
 def create_new_conference(db: DBSession, payload: ConferenceCreate):
     try:
         return service.add_new_conference_to_db(db, payload)
+    except NotFoundError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(exc),
+        )
     except IntegrityError:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
