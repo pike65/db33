@@ -1,4 +1,6 @@
-from sqlalchemy import CheckConstraint, ForeignKey, Integer, String
+from datetime import date, datetime
+
+from sqlalchemy import CheckConstraint, Date, DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.db import Base
@@ -128,4 +130,42 @@ class ExpertiseArea(Base):
 
 
 # -------------------- conferences -------------------- #
+class Conference(Base):
+    __tablename__ = "conferences"
+
+    conference_id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(100))
+    description: Mapped[str] = mapped_column(String(500))
+    acronym: Mapped[str] = mapped_column(String(20))
+    city: Mapped[str] = mapped_column(String(100))
+    country: Mapped[str] = mapped_column(String(100))
+
+    start_date: Mapped[date] = mapped_column(Date)
+    end_date: Mapped[date] = mapped_column(Date)
+
+    paper_submission_deadline: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    paper_review_deadline: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+    __table_args__ = (
+        CheckConstraint("start_date < end_date", name="check_start_earlier_than_end"),
+    )
+
+    # Relationships
+    hosts: Mapped[list[Host]] = relationship(
+        back_populates="conference", cascade="all, delete-orphan"
+    )
+
+
+class Host(Base):
+    __tablename__ = "hosts"
+
+    conference_id: Mapped[int] = mapped_column(
+        ForeignKey("conferences.conference_id", ondelete="CASCADE"), primary_key=True
+    )
+    host_name: Mapped[str] = mapped_column(String(100), primary_key=True)
+
+    # Relationships
+    conference: Mapped[Conference] = relationship(back_populates="hosts")
+
+
 # -------------------- papers -------------------- #

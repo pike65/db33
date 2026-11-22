@@ -13,3 +13,16 @@
   },
   "reviewer": null
 }
+
+{
+  "name": "Matrix",
+  "description": "A system built to deceive humanity.",
+  "acronym": "MX",
+  "city": "NYC",
+  "country": "USA",
+  "hosts": ["agents"],
+  "start_date": "2026-11-22",
+  "end_date": "2026-11-23",
+  "paper_submission_deadline": "2026-11-22T09:02:23.151Z",
+  "paper_review_deadline": "2026-11-22T09:02:23.151Z"
+}
