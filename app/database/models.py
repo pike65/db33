@@ -1,6 +1,14 @@
 from datetime import date, datetime
 
-from sqlalchemy import CheckConstraint, Date, DateTime, ForeignKey, Integer, String
+from sqlalchemy import (
+    Boolean,
+    CheckConstraint,
+    Date,
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.db import Base
@@ -41,6 +49,9 @@ class Author(Base):
     # Relationships
     user: Mapped[User] = relationship(back_populates="author_profile")
     author_research_areas: Mapped[list[AuthorResearchArea]] = relationship(
+        back_populates="author", cascade="all, delete-orphan"
+    )
+    authored_papers: Mapped[list[AuthorHasPaper]] = relationship(
         back_populates="author", cascade="all, delete-orphan"
     )
 
@@ -217,6 +228,7 @@ class Session(Base):
     # Relationships
     conference: Mapped[Conference] = relationship(back_populates="holds_sessions")
     reviewer: Mapped[Reviewer] = relationship(back_populates="chairs_sessions")
+    assigned_papers: Mapped[list[Paper]] = relationship(back_populates="session")
 
 
 # -------------------- tracks -------------------- #
@@ -244,9 +256,77 @@ class Track(Base):
     research_area: Mapped[ResearchArea] = relationship(back_populates="tracks")
     conference: Mapped[Conference] = relationship(back_populates="has_tracks")
     reviewer: Mapped[Reviewer] = relationship(back_populates="coordinated_tracks")
+    papers: Mapped[list[Paper]] = relationship(
+        back_populates="track", cascade="all, delete-orphan"
+    )
 
 
 # -------------------- papers -------------------- #
+class Paper(Base):
+    __tablename__ = "papers"
+
+    paper_id: Mapped[int] = mapped_column(primary_key=True)
+    track_id: Mapped[int] = mapped_column(
+        ForeignKey("tracks.track_id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    session_id: Mapped[int | None] = mapped_column(
+        ForeignKey("sessions.session_id", ondelete="SET NULL"),
+        nullable=True,
+    )
+
+    title: Mapped[str] = mapped_column(String(500))
+    abstract: Mapped[str] = mapped_column(String(500))
+    status: Mapped[str] = mapped_column(String(50), default="pending")
+    submission_date: Mapped[date] = mapped_column(Date)
+
+    __table_args__ = (
+        CheckConstraint(
+            "status IN ('pending', 'under_review', 'accepted', 'rejected')",
+            name="check_paper_status",
+        ),
+    )
+
+    # Relationships
+    track: Mapped[Track] = relationship(back_populates="papers")
+    session: Mapped[Session | None] = relationship(back_populates="assigned_papers")
+    keywords: Mapped[list[Keyword]] = relationship(
+        back_populates="paper", cascade="all, delete-orphan"
+    )
+    authors: Mapped[list[AuthorHasPaper]] = relationship(
+        back_populates="paper", cascade="all, delete-orphan"
+    )
+    versions: Mapped[list[PaperVersion]] = relationship(
+        back_populates="paper", cascade="all, delete-orphan"
+    )
+
+
+class Keyword(Base):
+    __tablename__ = "keywords"
+
+    paper_id: Mapped[int] = mapped_column(
+        ForeignKey("papers.paper_id", ondelete="CASCADE"), primary_key=True
+    )
+    keyword: Mapped[str] = mapped_column(String(100), primary_key=True)
+
+    # Relationships
+    paper: Mapped[Paper] = relationship(back_populates="keywords")
+
+
+class PaperVersion(Base):
+    __tablename__ = "paper_versions"
+
+    paper_id: Mapped[int] = mapped_column(
+        ForeignKey("papers.paper_id", ondelete="CASCADE"), primary_key=True
+    )
+    version_number: Mapped[int] = mapped_column(Integer, primary_key=True)
+
+    file_location: Mapped[str] = mapped_column(String(500))
+    upload_datetime: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    note: Mapped[str | None] = mapped_column(String(500), nullable=True)
+
+    # Relationships
+    paper: Mapped[Paper] = relationship(back_populates="versions")
 
 
 # -------------------- junction tables -------------------- #
@@ -265,3 +345,20 @@ class ReviewerMaintainsConference(Base):
     conference: Mapped[Conference] = relationship(
         back_populates="maintaining_reviewers"
     )
+
+
+class AuthorHasPaper(Base):
+    __tablename__ = "author_papers"
+
+    author_id: Mapped[int] = mapped_column(
+        ForeignKey("authors.author_id", ondelete="CASCADE"), primary_key=True
+    )
+    paper_id: Mapped[int] = mapped_column(
+        ForeignKey("papers.paper_id", ondelete="CASCADE"), primary_key=True
+    )
+    author_order: Mapped[int] = mapped_column(Integer)
+    is_corresponding: Mapped[bool] = mapped_column(Boolean, default=False)
+
+    # Relationships
+    author: Mapped[Author] = relationship(back_populates="authored_papers")
+    paper: Mapped[Paper] = relationship(back_populates="authors")
