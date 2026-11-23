@@ -26,9 +26,9 @@ stop:
 down:
     docker compose down -v
 
-# Wipe and restart fresh in background
-fresh: down upd
-
+# Fill tables of DB
+seed:
+    uv run python -m app.seed
 
 # ==========================================
 # Code Quality
