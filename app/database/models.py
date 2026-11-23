@@ -73,6 +73,9 @@ class ResearchArea(Base):
     author_research_areas: Mapped[list[AuthorResearchArea]] = relationship(
         back_populates="research_area", cascade="all, delete-orphan"
     )
+    tracks: Mapped[list[Track]] = relationship(
+        back_populates="research_area", cascade="all, delete-orphan"
+    )
 
 
 class Reviewer(Base):
@@ -100,6 +103,9 @@ class Reviewer(Base):
         back_populates="reviewer", cascade="all, delete-orphan"
     )
     chairs_sessions: Mapped[list[Session]] = relationship(
+        back_populates="reviewer", cascade="all, delete-orphan"
+    )
+    coordinated_tracks: Mapped[list[Track]] = relationship(
         back_populates="reviewer", cascade="all, delete-orphan"
     )
 
@@ -166,6 +172,9 @@ class Conference(Base):
     holds_sessions: Mapped[list[Session]] = relationship(
         back_populates="conference", cascade="all, delete-orphan"
     )
+    has_tracks: Mapped[list[Track]] = relationship(
+        back_populates="conference", cascade="all, delete-orphan"
+    )
 
 
 class Host(Base):
@@ -208,6 +217,33 @@ class Session(Base):
     # Relationships
     conference: Mapped[Conference] = relationship(back_populates="holds_sessions")
     reviewer: Mapped[Reviewer] = relationship(back_populates="chairs_sessions")
+
+
+# -------------------- tracks -------------------- #
+class Track(Base):
+    __tablename__ = "tracks"
+
+    track_id: Mapped[int] = mapped_column(primary_key=True)
+    research_area_id: Mapped[int] = mapped_column(
+        ForeignKey("research_areas.research_area_id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    name: Mapped[str] = mapped_column(String(100))
+    description: Mapped[str] = mapped_column(String(500))
+
+    conference_id: Mapped[int] = mapped_column(
+        ForeignKey("conferences.conference_id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    reviewer_id: Mapped[int] = mapped_column(
+        ForeignKey("reviewers.reviewer_id", ondelete="CASCADE"),
+        nullable=False,
+    )
+
+    # Relationships
+    research_area: Mapped[ResearchArea] = relationship(back_populates="tracks")
+    conference: Mapped[Conference] = relationship(back_populates="has_tracks")
+    reviewer: Mapped[Reviewer] = relationship(back_populates="coordinated_tracks")
 
 
 # -------------------- papers -------------------- #

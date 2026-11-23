@@ -19,8 +19,16 @@ class ConferenceBase(BaseModel):
 
 
 # -------------------- input -------------------- #
+class ConferenceTrackCreate(BaseModel):
+    name: str = Field(..., max_length=100)
+    description: str = Field(..., max_length=500)
+    research_area_id: int = Field(..., ge=1)
+    reviewer_id: int = Field(..., ge=1)
+
+
 class ConferenceCreate(ConferenceBase):
     reviewer_ids: list[int] = Field(..., min_length=1)
+    tracks: list[ConferenceTrackCreate] = Field(..., min_length=1)
 
 
 # -------------------- output -------------------- #
