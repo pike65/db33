@@ -3,7 +3,6 @@ from datetime import date, datetime
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
-# -------------------- base classes -------------------- #
 class ConferenceBase(BaseModel):
     name: str = Field(..., max_length=100)
     description: str = Field(..., max_length=500)
@@ -18,7 +17,6 @@ class ConferenceBase(BaseModel):
     paper_review_deadline: datetime
 
 
-# -------------------- input -------------------- #
 class ConferenceTrackCreate(BaseModel):
     name: str = Field(..., max_length=100)
     description: str = Field(..., max_length=500)
@@ -31,7 +29,6 @@ class ConferenceCreate(ConferenceBase):
     tracks: list[ConferenceTrackCreate] = Field(..., min_length=1)
 
 
-# -------------------- output -------------------- #
 class ConferenceResponse(ConferenceBase):
     model_config = ConfigDict(from_attributes=True)
 

@@ -3,7 +3,6 @@ from typing import Annotated
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, model_validator
 
 
-# -------------------- base classes -------------------- #
 class UserBase(BaseModel):
     email: EmailStr
     first_name: str = Field(..., max_length=100)
@@ -13,7 +12,6 @@ class UserBase(BaseModel):
     phone_number: str = Field(..., max_length=100)
 
 
-# -------------------- input -------------------- #
 class AuthorCreate(BaseModel):
     orcid: Annotated[str | None, Field(min_length=19, max_length=19)] = None
     research_area_ids: list[int] = Field(default_factory=list, min_length=1)
@@ -37,7 +35,6 @@ class UserCreate(UserBase):
         return self
 
 
-# -------------------- output -------------------- #
 class AuthorResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

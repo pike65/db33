@@ -4,25 +4,10 @@ from sqlalchemy.dialects.postgresql import insert
 from app.database.db import DBSession
 from app.database.models import ExpertiseArea, ResearchArea
 from app.modules.admin import service
+from app.modules.admin.data import EXPERTISE_AREAS, RESEARCH_AREAS
 from app.modules.admin.schemas import ExpertiseAreaResponse, ResearchAreaResponse
 
 router = APIRouter(prefix="/admin", tags=["admin"])
-
-RESEARCH_AREAS = [
-    "Machine Learning",
-    "Distributed Systems",
-    "Databases",
-    "Cybersecurity",
-    "Software Engineering",
-]
-
-EXPERTISE_AREAS = [
-    "Peer Review",
-    "Data Systems",
-    "Cloud & Infrastructure",
-    "Algorithms",
-    "Applied AI",
-]
 
 
 @router.post("/seed/areas", status_code=status.HTTP_201_CREATED)
