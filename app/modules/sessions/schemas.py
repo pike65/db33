@@ -10,6 +10,9 @@ class SessionBase(BaseModel):
     start_time: datetime
     end_time: datetime
 
+    conference_id: int = Field(..., ge=1)
+    reviewer_id: int = Field(..., ge=1)
+
 
 class SessionCreate(SessionBase):
     pass

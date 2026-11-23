@@ -99,6 +99,9 @@ class Reviewer(Base):
     maintained_conferences: Mapped[list[ReviewerMaintainsConference]] = relationship(
         back_populates="reviewer", cascade="all, delete-orphan"
     )
+    chairs_sessions: Mapped[list[Session]] = relationship(
+        back_populates="reviewer", cascade="all, delete-orphan"
+    )
 
 
 class ReviewerExpertiseArea(Base):
@@ -160,6 +163,9 @@ class Conference(Base):
     maintaining_reviewers: Mapped[list[ReviewerMaintainsConference]] = relationship(
         back_populates="conference", cascade="all, delete-orphan"
     )
+    holds_sessions: Mapped[list[Session]] = relationship(
+        back_populates="conference", cascade="all, delete-orphan"
+    )
 
 
 class Host(Base):
@@ -179,6 +185,15 @@ class Session(Base):
     __tablename__ = "sessions"
 
     session_id: Mapped[int] = mapped_column(primary_key=True)
+    conference_id: Mapped[int] = mapped_column(
+        ForeignKey("conferences.conference_id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    reviewer_id: Mapped[int] = mapped_column(
+        ForeignKey("reviewers.reviewer_id", ondelete="CASCADE"),
+        nullable=False,
+    )
+
     title: Mapped[str] = mapped_column(String(100))
     room: Mapped[str] = mapped_column(String(10))
 
@@ -187,14 +202,18 @@ class Session(Base):
     end_time: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
     __table_args__ = (
-        CheckConstraint("start_time < end_time", name="check_start_eariler_than_end"),
+        CheckConstraint("start_time < end_time", name="check_start_earlier_than_end"),
     )
+
+    # Relationships
+    conference: Mapped[Conference] = relationship(back_populates="holds_sessions")
+    reviewer: Mapped[Reviewer] = relationship(back_populates="chairs_sessions")
 
 
 # -------------------- papers -------------------- #
 
 
-# -------------------- entity relationships -------------------- #
+# -------------------- junction tables -------------------- #
 class ReviewerMaintainsConference(Base):
     __tablename__ = "maintained_conferences"
 
