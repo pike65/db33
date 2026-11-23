@@ -28,7 +28,7 @@ down:
 
 # Fill tables of DB
 seed:
-    uv run python -m app.seed
+    uv run python -m app.core.seed
 
 # ==========================================
 # Code Quality
