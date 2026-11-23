@@ -15,6 +15,8 @@ def create_new_paper(db: DBSession, payload: PaperCreate):
         return service.add_new_paper_to_db(db, payload)
     except NotFoundError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
     except IntegrityError:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

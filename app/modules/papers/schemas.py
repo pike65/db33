@@ -3,7 +3,13 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-PaperStatus = Literal["pending", "under_review", "accepted", "rejected"]
+PaperStatus = Literal[
+    "submitted",
+    "under review",
+    "accepted",
+    "rejected",
+    "withdrawn",
+]
 
 
 class PaperAuthorInput(BaseModel):
@@ -29,7 +35,7 @@ class PaperBase(BaseModel):
 
 
 class PaperCreate(PaperBase):
-    status: PaperStatus = "pending"
+    status: PaperStatus = "submitted"
     authors: list[PaperAuthorInput] = Field(..., min_length=1)
     version: PaperVersionInput
 
@@ -57,7 +63,7 @@ class PaperResponse(BaseModel):
     paper_id: int
     title: str
     abstract: str
-    status: str
+    status: PaperStatus
     submission_date: date
     track_id: int
     session_id: int | None

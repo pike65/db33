@@ -8,6 +8,7 @@ from sqlalchemy import (
     ForeignKey,
     Integer,
     String,
+    UniqueConstraint,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -19,12 +20,14 @@ class User(Base):
     __tablename__ = "users"
 
     user_id: Mapped[int] = mapped_column(primary_key=True)
-    email: Mapped[str] = mapped_column(String(255), unique=True, index=True)
-    first_name: Mapped[str] = mapped_column(String(100))
-    last_name: Mapped[str] = mapped_column(String(100))
-    country: Mapped[str] = mapped_column(String(100))
-    affiliation: Mapped[str] = mapped_column(String(100))
-    phone_number: Mapped[str] = mapped_column(String(100), unique=True)
+    email: Mapped[str] = mapped_column(
+        String(255), unique=True, index=True, nullable=False
+    )
+    first_name: Mapped[str] = mapped_column(String(100), nullable=False)
+    last_name: Mapped[str] = mapped_column(String(100), nullable=False)
+    country: Mapped[str] = mapped_column(String(100), nullable=False)
+    affiliation: Mapped[str] = mapped_column(String(100), nullable=False)
+    phone_number: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
 
     # Relationships
     author_profile: Mapped[Author | None] = relationship(
@@ -78,7 +81,7 @@ class ResearchArea(Base):
     __tablename__ = "research_areas"
 
     research_area_id: Mapped[int] = mapped_column(primary_key=True)
-    label: Mapped[str] = mapped_column(String(100), unique=True)
+    label: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
 
     # Relationships
     author_research_areas: Mapped[list[AuthorResearchArea]] = relationship(
@@ -96,7 +99,7 @@ class Reviewer(Base):
         ForeignKey("users.user_id", ondelete="CASCADE"),
         primary_key=True,
     )
-    years_of_experience: Mapped[int] = mapped_column(Integer)
+    years_of_experience: Mapped[int] = mapped_column(Integer, nullable=False)
 
     __table_args__ = (
         CheckConstraint(
@@ -117,6 +120,9 @@ class Reviewer(Base):
         back_populates="reviewer", cascade="all, delete-orphan"
     )
     coordinated_tracks: Mapped[list[Track]] = relationship(
+        back_populates="reviewer", cascade="all, delete-orphan"
+    )
+    submitted_reviews: Mapped[list[Review]] = relationship(
         back_populates="reviewer", cascade="all, delete-orphan"
     )
 
@@ -144,7 +150,7 @@ class ExpertiseArea(Base):
     __tablename__ = "expertise_areas"
 
     expertise_area_id: Mapped[int] = mapped_column(primary_key=True)
-    label: Mapped[str] = mapped_column(String(100), unique=True)
+    label: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
 
     # Relationships
     reviewer_expertise_areas: Mapped[list[ReviewerExpertiseArea]] = relationship(
@@ -157,20 +163,24 @@ class Conference(Base):
     __tablename__ = "conferences"
 
     conference_id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(100))
-    description: Mapped[str] = mapped_column(String(500))
-    acronym: Mapped[str] = mapped_column(String(20))
-    city: Mapped[str] = mapped_column(String(100))
-    country: Mapped[str] = mapped_column(String(100))
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    description: Mapped[str] = mapped_column(String(500), nullable=False)
+    acronym: Mapped[str] = mapped_column(String(20), nullable=False)
+    city: Mapped[str] = mapped_column(String(100), nullable=False)
+    country: Mapped[str] = mapped_column(String(100), nullable=False)
 
-    start_date: Mapped[date] = mapped_column(Date)
-    end_date: Mapped[date] = mapped_column(Date)
+    start_date: Mapped[date] = mapped_column(Date, nullable=False)
+    end_date: Mapped[date] = mapped_column(Date, nullable=False)
 
-    paper_submission_deadline: Mapped[datetime] = mapped_column(DateTime(timezone=True))
-    paper_review_deadline: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    paper_submission_deadline: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
+    paper_review_deadline: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
 
     __table_args__ = (
-        CheckConstraint("start_date < end_date", name="check_start_earlier_than_end"),
+        CheckConstraint("start_date <= end_date", name="check_start_not_after_end"),
     )
 
     # Relationships
@@ -214,12 +224,14 @@ class Session(Base):
         nullable=False,
     )
 
-    title: Mapped[str] = mapped_column(String(100))
-    room: Mapped[str] = mapped_column(String(10))
+    title: Mapped[str] = mapped_column(String(100), nullable=False)
+    room: Mapped[str] = mapped_column(String(10), nullable=False)
 
-    session_date: Mapped[date] = mapped_column(Date)
-    start_time: Mapped[datetime] = mapped_column(DateTime(timezone=True))
-    end_time: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    session_date: Mapped[date] = mapped_column(Date, nullable=False)
+    start_time: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
+    end_time: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
     __table_args__ = (
         CheckConstraint("start_time < end_time", name="check_start_earlier_than_end"),
@@ -240,8 +252,8 @@ class Track(Base):
         ForeignKey("research_areas.research_area_id", ondelete="CASCADE"),
         nullable=False,
     )
-    name: Mapped[str] = mapped_column(String(100))
-    description: Mapped[str] = mapped_column(String(500))
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    description: Mapped[str] = mapped_column(String(500), nullable=False)
 
     conference_id: Mapped[int] = mapped_column(
         ForeignKey("conferences.conference_id", ondelete="CASCADE"),
@@ -275,14 +287,14 @@ class Paper(Base):
         nullable=True,
     )
 
-    title: Mapped[str] = mapped_column(String(500))
-    abstract: Mapped[str] = mapped_column(String(500))
-    status: Mapped[str] = mapped_column(String(50), default="pending")
-    submission_date: Mapped[date] = mapped_column(Date)
+    title: Mapped[str] = mapped_column(String(500), nullable=False)
+    abstract: Mapped[str] = mapped_column(String(500), nullable=False)
+    status: Mapped[str] = mapped_column(String(50), default="submitted", nullable=False)
+    submission_date: Mapped[date] = mapped_column(Date, nullable=False)
 
     __table_args__ = (
         CheckConstraint(
-            "status IN ('pending', 'under_review', 'accepted', 'rejected')",
+            "status IN ('submitted', 'under review', 'accepted', 'rejected', 'withdrawn')",
             name="check_paper_status",
         ),
     )
@@ -297,6 +309,9 @@ class Paper(Base):
         back_populates="paper", cascade="all, delete-orphan"
     )
     versions: Mapped[list[PaperVersion]] = relationship(
+        back_populates="paper", cascade="all, delete-orphan"
+    )
+    reviews: Mapped[list[Review]] = relationship(
         back_populates="paper", cascade="all, delete-orphan"
     )
 
@@ -321,12 +336,57 @@ class PaperVersion(Base):
     )
     version_number: Mapped[int] = mapped_column(Integer, primary_key=True)
 
-    file_location: Mapped[str] = mapped_column(String(500))
-    upload_datetime: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    file_location: Mapped[str] = mapped_column(String(500), nullable=False)
+    upload_datetime: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
     note: Mapped[str | None] = mapped_column(String(500), nullable=True)
+
+    __table_args__ = (
+        CheckConstraint("version_number >= 1", name="check_version_number_positive"),
+    )
 
     # Relationships
     paper: Mapped[Paper] = relationship(back_populates="versions")
+
+
+# -------------------- reviews -------------------- #
+class Review(Base):
+    __tablename__ = "reviews"
+
+    review_id: Mapped[int] = mapped_column(primary_key=True)
+    reviewer_id: Mapped[int] = mapped_column(
+        ForeignKey("reviewers.reviewer_id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    paper_id: Mapped[int] = mapped_column(
+        ForeignKey("papers.paper_id", ondelete="CASCADE"),
+        nullable=False,
+    )
+
+    overall_score: Mapped[int] = mapped_column(Integer, nullable=False)
+    recommendation: Mapped[str] = mapped_column(String(50), nullable=False)
+
+    comments_for_authors: Mapped[str] = mapped_column(String(500), nullable=False)
+    confidential_comments: Mapped[str] = mapped_column(String(500), nullable=False)
+
+    submission_date: Mapped[date] = mapped_column(Date, nullable=False)
+
+    __table_args__ = (
+        CheckConstraint(
+            "overall_score >= 1 AND overall_score <= 5",
+            name="check_overall_score",
+        ),
+        CheckConstraint(
+            "recommendation IN ('accept', 'reject')",
+            name="check_recommendation",
+        ),
+        UniqueConstraint("reviewer_id", "paper_id", name="uq_review_reviewer_paper"),
+    )
+
+    # Relationships
+    reviewer: Mapped[Reviewer] = relationship(back_populates="submitted_reviews")
+    paper: Mapped[Paper] = relationship(back_populates="reviews")
 
 
 # -------------------- junction tables -------------------- #
@@ -356,8 +416,15 @@ class AuthorHasPaper(Base):
     paper_id: Mapped[int] = mapped_column(
         ForeignKey("papers.paper_id", ondelete="CASCADE"), primary_key=True
     )
-    author_order: Mapped[int] = mapped_column(Integer)
-    is_corresponding: Mapped[bool] = mapped_column(Boolean, default=False)
+    author_order: Mapped[int] = mapped_column(Integer, nullable=False)
+    is_corresponding: Mapped[bool] = mapped_column(
+        Boolean, default=False, nullable=False
+    )
+
+    __table_args__ = (
+        CheckConstraint("author_order >= 1", name="check_author_order_positive"),
+        UniqueConstraint("paper_id", "author_order", name="uq_paper_author_order"),
+    )
 
     # Relationships
     author: Mapped[Author] = relationship(back_populates="authored_papers")

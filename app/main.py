@@ -9,6 +9,7 @@ from app.database.db import Base, engine
 from app.modules.admin.routers import router as admin_router
 from app.modules.conferences.routers import router as conferences_router
 from app.modules.papers.routers import router as papers_router
+from app.modules.reviews.routers import router as reviews_router
 from app.modules.sessions.routers import router as sessions_router
 from app.modules.tracks.routers import router as tracks_router
 from app.modules.users.routers import router as users_router
@@ -44,3 +45,4 @@ app.include_router(conferences_router)
 app.include_router(sessions_router)
 app.include_router(tracks_router)
 app.include_router(papers_router)
+app.include_router(reviews_router)

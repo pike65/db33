@@ -17,17 +17,58 @@ from app.database.models import (
 from app.modules.papers.schemas import PaperCreate
 
 
+def _validate_session_assignment(
+    db: Session,
+    *,
+    session_id: int | None,
+    status: str,
+    track: Track,
+) -> ConfSession | None:
+    if session_id is None:
+        return None
+
+    session = db.scalar(select(ConfSession).where(ConfSession.session_id == session_id))
+    if not session:
+        raise NotFoundError("Session not found.")
+
+    if status != "accepted":
+        raise ValueError("Only accepted papers can be assigned to a session.")
+
+    if track.conference_id != session.conference_id:
+        raise ValueError(
+            "Paper's track conference must match the session's conference."
+        )
+
+    return session
+
+
+# For update endpoint
+# def _check_authors_not_reviewing(
+#     db: Session, paper_id: int, author_ids: list[int]
+# ) -> None:
+#     conflicting_reviewer_id = db.scalar(
+#         select(Review.reviewer_id).where(
+#             Review.paper_id == paper_id,
+#             Review.reviewer_id.in_(author_ids),
+#         )
+#     )
+#     if conflicting_reviewer_id is not None:
+#         raise ValueError(
+#             f"Reviewer {conflicting_reviewer_id} has already reviewed this paper and cannot be listed as an author."
+#         )
+
+
 def add_new_paper_to_db(db: Session, data: PaperCreate) -> Paper:
     track = db.scalar(select(Track).where(Track.track_id == data.track_id))
     if not track:
         raise NotFoundError("Track not found.")
 
-    if data.session_id is not None:
-        session = db.scalar(
-            select(ConfSession).where(ConfSession.session_id == data.session_id)
-        )
-        if not session:
-            raise NotFoundError("Session not found.")
+    _validate_session_assignment(
+        db,
+        session_id=data.session_id,
+        status=data.status,
+        track=track,
+    )
 
     author_ids = list(dict.fromkeys(a.author_id for a in data.authors))
     found_author_ids = set(
