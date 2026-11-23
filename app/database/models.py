@@ -174,6 +174,23 @@ class Host(Base):
     conference: Mapped[Conference] = relationship(back_populates="hosts")
 
 
+# -------------------- sessions -------------------- #
+class Session(Base):
+    __tablename__ = "sessions"
+
+    session_id: Mapped[int] = mapped_column(primary_key=True)
+    title: Mapped[str] = mapped_column(String(100))
+    room: Mapped[str] = mapped_column(String(10))
+
+    session_date: Mapped[date] = mapped_column(Date)
+    start_time: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    end_time: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+    __table_args__ = (
+        CheckConstraint("start_time < end_time", name="check_start_eariler_than_end"),
+    )
+
+
 # -------------------- papers -------------------- #
 
 

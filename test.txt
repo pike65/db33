@@ -5,24 +5,35 @@
   "country": "USA",
   "affiliation": "The One",
   "phone_number": "12341234",
-  "author": {
-    "orcid": null,
-    "research_area_ids": [
-      1, 2
-    ]
-  },
+  "author": null,
+  "reviewer": {"years_of_experience": 4, "expertise_area_ids": [1, 2]}
+}
+
+{
+  "email": "larissa@abc.com",
+  "first_name": "Larissa",
+  "last_name": "Liveir",
+  "country": "Brazil",
+  "affiliation": "Guitar",
+  "phone_number": "43214321",
+  "author": {"orcid": null, "research_area_ids": [2, 3, 4]},
   "reviewer": null
 }
 
 {
   "name": "Matrix",
-  "description": "A system built to deceive humanity.",
+  "description": "System",
   "acronym": "MX",
   "city": "NYC",
   "country": "USA",
-  "hosts": ["agents"],
-  "start_date": "2026-11-22",
-  "end_date": "2026-11-23",
-  "paper_submission_deadline": "2026-11-22T09:02:23.151Z",
-  "paper_review_deadline": "2026-11-22T09:02:23.151Z"
+  "hosts": [
+    "agents"
+  ],
+  "start_date": "2026-11-23",
+  "end_date": "2026-11-24",
+  "paper_submission_deadline": "2026-11-23T04:48:19.186Z",
+  "paper_review_deadline": "2026-11-23T04:48:19.186Z",
+  "reviewer_ids": [
+    1
+  ]
 }
