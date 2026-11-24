@@ -4,7 +4,11 @@ from sqlalchemy.exc import IntegrityError
 from app.core.exceptions import NotFoundError
 from app.database.db import DBSession
 from app.modules.reviews import service
-from app.modules.reviews.schemas import ReviewCreate, ReviewResponse
+from app.modules.reviews.schemas import (
+    ReviewCreate,
+    ReviewResponse,
+    ReviewUpdate,
+)
 
 router = APIRouter(prefix="/reviews", tags=["reviews"])
 
@@ -41,3 +45,25 @@ def get_review_by_id(db: DBSession, review_id: int):
         return service.get_review_by_id_from_db(db, review_id)
     except NotFoundError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+
+
+@router.patch(
+    "/{review_id}", response_model=ReviewResponse, status_code=status.HTTP_200_OK
+)
+def update_review(db: DBSession, review_id: int, payload: ReviewUpdate):
+    try:
+        return service.update_review_in_db(db, review_id=review_id, data=payload)
+    except NotFoundError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
+
+
+@router.delete("/{review_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_review(db: DBSession, review_id: int):
+    try:
+        service.delete_review_from_db(db, review_id=review_id)
+    except NotFoundError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc))
