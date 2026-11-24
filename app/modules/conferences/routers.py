@@ -4,7 +4,11 @@ from sqlalchemy.exc import IntegrityError
 from app.core.exceptions import NotFoundError
 from app.database.db import DBSession
 from app.modules.conferences import service
-from app.modules.conferences.schemas import ConferenceCreate, ConferenceResponse
+from app.modules.conferences.schemas import (
+    ConferenceCreate,
+    ConferenceResponse,
+    ConferenceUpdate,
+)
 
 router = APIRouter(prefix="/conferences", tags=["conferences"])
 
@@ -48,3 +52,32 @@ def get_conference_by_id(db: DBSession, conference_id: int):
         return service.get_conference_by_id_from_db(db, conference_id)
     except NotFoundError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+
+
+@router.patch(
+    "/{conference_id}",
+    response_model=ConferenceResponse,
+    status_code=status.HTTP_200_OK,
+)
+def update_conference(db: DBSession, conference_id: int, payload: ConferenceUpdate):
+    try:
+        return service.update_conference_in_db(
+            db, conference_id=conference_id, data=payload
+        )
+    except NotFoundError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
+
+
+@router.delete(
+    "/{conference_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+def delete_conference(db: DBSession, conference_id: int):
+    try:
+        service.delete_conference_from_db(db, conference_id=conference_id)
+    except NotFoundError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc))

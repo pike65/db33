@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -11,7 +11,14 @@ from app.database.models import (
     ReviewerMaintainsConference,
     Track,
 )
-from app.modules.conferences.schemas import ConferenceCreate
+from app.modules.conferences.schemas import ConferenceCreate, ConferenceUpdate
+
+
+def _sync_conference_hosts(db: Session, conference_id: int, hosts: list[str]) -> None:
+    unique_hosts = list(dict.fromkeys(hosts))
+    db.execute(delete(Host).where(Host.conference_id == conference_id))
+    for host_name in unique_hosts:
+        db.add(Host(conference_id=conference_id, host_name=host_name))
 
 
 def add_new_conference_to_db(db: Session, data: ConferenceCreate) -> Conference:
@@ -96,9 +103,55 @@ def get_all_conferences_from_db(db: Session, skip: int, limit: int) -> list[Conf
 
 
 def get_conference_by_id_from_db(db: Session, conference_id: int) -> Conference:
-    conference = db.scalar(
-        select(Conference).where(Conference.conference_id == conference_id)
-    )
+    conference = db.get(Conference, conference_id)
     if not conference:
         raise NotFoundError("Conference not found.")
     return conference
+
+
+def update_conference_in_db(
+    db: Session, conference_id: int, data: ConferenceUpdate
+) -> Conference:
+    conference = db.get(Conference, conference_id)
+    if not conference:
+        raise NotFoundError("Conference not found.")
+
+    updates = data.model_dump(exclude_unset=True)
+    if not updates:
+        return conference
+
+    hosts = updates.pop("hosts", None)
+
+    for field, value in updates.items():
+        setattr(conference, field, value)
+
+    if conference.start_date > conference.end_date:
+        raise ValueError("start_date cannot be after end_date.")
+
+    if hosts is not None:
+        _sync_conference_hosts(db, conference_id=conference_id, hosts=hosts)
+
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise ValueError("Invalid conference data or constraint violation.") from None
+
+    db.refresh(conference)
+    return conference
+
+
+def delete_conference_from_db(db: Session, conference_id: int) -> None:
+    conference = db.get(Conference, conference_id)
+    if not conference:
+        raise NotFoundError("Conference not found.")
+
+    db.delete(conference)
+
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise ValueError(
+            "Cannot delete conference due to active references or constraint violation."
+        ) from None
