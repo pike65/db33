@@ -3,6 +3,7 @@ from datetime import date, datetime
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
+# -------------------- base classes -------------------- #
 class SessionBase(BaseModel):
     title: str = Field(..., max_length=100)
     room: str = Field(..., max_length=10)
@@ -14,10 +15,12 @@ class SessionBase(BaseModel):
     reviewer_id: int = Field(..., ge=1)
 
 
+# -------------------- create -------------------- #
 class SessionCreate(SessionBase):
     pass
 
 
+# -------------------- update -------------------- #
 class SessionUpdate(BaseModel):
     title: str | None = Field(default=None, min_length=1, max_length=100)
     room: str | None = Field(default=None, min_length=1, max_length=10)
@@ -57,6 +60,7 @@ class SessionUpdate(BaseModel):
         return value
 
 
+# -------------------- response -------------------- #
 class SessionResponse(SessionBase):
     model_config = ConfigDict(from_attributes=True)
 
