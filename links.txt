@@ -4,7 +4,7 @@ Video presentation (Google Drive):
 -- google video link --
 
 Deployed application (Swagger UI):
-https://db33-hotu.onrender.com
+https://db33-hotu.onrender.com/docs
 
 Demo account credentials:
 None required (no authentication in this application).
