@@ -1,7 +1,7 @@
 Assignment 3 - Daryn Imash (individual submission)
 
 Video presentation (Google Drive):
--- google video link --
+https://drive.google.com/file/d/1dD5nSUuVuelDT_dwhLXatO1dY8L9oe8-/view?usp=drive_link
 
 Deployed application (Swagger UI):
 https://db33-hotu.onrender.com/docs
