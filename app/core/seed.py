@@ -38,6 +38,7 @@ RESEARCH_AREAS = [
 EXPERTISE_AREAS = [
     "Peer Review",
     "Data Systems",
+    "Databases",
     "Cloud & Infrastructure",
     "Algorithms",
     "Applied AI",
@@ -87,6 +88,7 @@ def seed_database(db: Session) -> None:
 
     ea_ml = ea_map["Applied AI"]
     ea_data = ea_map["Data Systems"]
+    ea_db = ea_map["Databases"]
     ea_crypto = ea_map["Cloud & Infrastructure"]
 
     # 2. Users (12 total: 4 both roles, 4 author-only, 4 reviewer-only)
@@ -249,6 +251,10 @@ def seed_database(db: Session) -> None:
                 expertise_area_id=ea_data.expertise_area_id,
             ),
             ReviewerExpertiseArea(
+                reviewer_id=r_dana.reviewer_id,
+                expertise_area_id=ea_db.expertise_area_id,
+            ),
+            ReviewerExpertiseArea(
                 reviewer_id=r_saule.reviewer_id,
                 expertise_area_id=ea_crypto.expertise_area_id,
             ),
@@ -294,7 +300,8 @@ def seed_database(db: Session) -> None:
                 reviewer_id=r_rustem.reviewer_id,
             ),
             ReviewerMaintainsConference(
-                conference_id=conf_astana.conference_id, reviewer_id=r_dana.reviewer_id
+                conference_id=conf_astana.conference_id,
+                reviewer_id=r_dana.reviewer_id,
             ),
             ReviewerMaintainsConference(
                 conference_id=conf_astana.conference_id,
@@ -366,7 +373,7 @@ def seed_database(db: Session) -> None:
     papers_spec = [
         {
             "title": "Neural Query Cardinality Estimation",
-            "abstract": "Learned models for join size estimation.",
+            "abstract": "Machine learning models for join size estimation.",
             "status": "accepted",
             "submission_date": date(2026, 3, 10),
             "track_id": track_db.track_id,

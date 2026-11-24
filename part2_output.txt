@@ -1,0 +1,131 @@
+=== Task 1: Create tables ===
+
+=== Task 2: Row counts ===
+  conferences: 2
+  expertise_areas: 6
+  research_areas: 5
+  users: 12
+  authors: 8
+  hosts: 3
+  reviewers: 8
+  author_research_areas: 2
+  maintained_conferences: 4
+  reviewer_expertise_areas: 4
+  sessions: 2
+  tracks: 4
+  papers: 10
+  author_papers: 15
+  keywords: 20
+  paper_versions: 13
+  reviews: 10
+
+=== Task 3.1: Update Arman's phone ===
+Before: +77010000001
+SQL: UPDATE users SET phone_number=%(phone_number)s::VARCHAR WHERE users.email = %(email_1)s::VARCHAR
+After: +77773414141
+
+=== Task 3.2: Extend conference review deadlines ===
+Before: [('ASC26', 'Astana', datetime.datetime(2026, 5, 15, 23, 59, tzinfo=datetime.timezone.utc)), ('BSW26', 'Berlin', datetime.datetime(2026, 8, 1, 23, 59, tzinfo=datetime.timezone.utc))]
+SQL: UPDATE conferences SET paper_review_deadline=CASE WHEN (conferences.city = %(city_1)s::VARCHAR) THEN conferences.paper_review_deadline + interval '7 days' ELSE conferences.paper_review_deadline + interval '3 days' END
+After: [('ASC26', 'Astana', datetime.datetime(2026, 5, 22, 23, 59, tzinfo=datetime.timezone.utc)), ('BSW26', 'Berlin', datetime.datetime(2026, 8, 4, 23, 59, tzinfo=datetime.timezone.utc))]
+
+=== Task 4.1: Delete Amina's withdrawn papers ===
+Papers before: 10
+SQL: SELECT papers.paper_id, papers.track_id, papers.session_id, papers.title, papers.abstract, papers.status, papers.submission_date 
+FROM papers 
+WHERE papers.paper_id IN (__[POSTCOMPILE_paper_id_1])
+Papers after: 8
+
+=== Task 4.2: Delete empty Astana sessions ===
+Sessions before: 2
+SQL: SELECT sessions.session_id, sessions.conference_id, sessions.reviewer_id, sessions.title, sessions.room, sessions.session_date, sessions.start_time, sessions.end_time 
+FROM sessions 
+WHERE sessions.conference_id IN (SELECT conferences.conference_id 
+FROM conferences 
+WHERE conferences.city = %(city_1)s::VARCHAR) AND (sessions.session_id NOT IN (SELECT papers.session_id 
+FROM papers 
+WHERE papers.session_id IS NOT NULL))
+Sessions after: 1
+
+=== Task 5.1 ===
+SQL: SELECT papers.paper_id, papers.title, users.first_name || %(param_1)s::VARCHAR || users.last_name AS corresponding_author, users.email AS corresponding_email, tracks.name AS track_name, conferences.conference_id, conferences.acronym 
+FROM papers JOIN tracks ON tracks.track_id = papers.track_id JOIN conferences ON conferences.conference_id = tracks.conference_id JOIN author_papers ON author_papers.paper_id = papers.paper_id AND author_papers.is_corresponding IS true JOIN authors ON authors.author_id = author_papers.author_id JOIN users ON users.user_id = authors.author_id 
+WHERE papers.status = %(status_1)s::VARCHAR ORDER BY papers.paper_id
+  {'paper_id': 51, 'title': 'Neural Query Cardinality Estimation', 'corresponding_author': 'Arman Armanov', 'corresponding_email': 'arman.armanov@example.com', 'track_name': 'Data Engineering', 'conference_id': 11, 'acronym': 'ASC26'}
+  {'paper_id': 52, 'title': 'Low-Latency Transformers on Edge Nodes', 'corresponding_author': 'Madina Kassenova', 'corresponding_email': 'madina.kassenova@example.com', 'track_name': 'Applied AI', 'conference_id': 11, 'acronym': 'ASC26'}
+  {'paper_id': 58, 'title': 'Vector Index Compression with Product Quantization', 'corresponding_author': 'Alikhan Tolegen', 'corresponding_email': 'alikhan.tolegen@example.com', 'track_name': 'Data Engineering', 'conference_id': 11, 'acronym': 'ASC26'}
+
+=== Task 5.2 ===
+SQL: SELECT papers.paper_id, papers.title 
+FROM papers 
+WHERE papers.abstract ILIKE %(abstract_1)s::VARCHAR ORDER BY papers.paper_id
+  {'paper_id': 51, 'title': 'Neural Query Cardinality Estimation'}
+
+=== Task 5.3 ===
+SQL: SELECT paper_versions.version_number, paper_versions.file_location, paper_versions.upload_datetime 
+FROM paper_versions 
+WHERE paper_versions.paper_id = %(paper_id_1)s::INTEGER ORDER BY paper_versions.version_number DESC
+  {'version_number': 2, 'file_location': '/files/p1_v2.pdf', 'upload_datetime': datetime.datetime(2026, 4, 1, 10, 0, tzinfo=datetime.timezone.utc)}
+  {'version_number': 1, 'file_location': '/files/p1_v1.pdf', 'upload_datetime': datetime.datetime(2026, 3, 10, 12, 0, tzinfo=datetime.timezone.utc)}
+
+=== Task 5.4 ===
+SQL: SELECT DISTINCT reviewers.reviewer_id, users.first_name || %(param_1)s::VARCHAR || users.last_name AS full_name, users.email 
+FROM reviewers JOIN maintained_conferences ON maintained_conferences.reviewer_id = reviewers.reviewer_id JOIN reviewer_expertise_areas ON reviewer_expertise_areas.reviewer_id = reviewers.reviewer_id JOIN expertise_areas ON expertise_areas.expertise_area_id = reviewer_expertise_areas.expertise_area_id JOIN users ON users.user_id = reviewers.reviewer_id 
+WHERE maintained_conferences.conference_id = %(conference_id_1)s::INTEGER AND expertise_areas.label = %(label_1)s::VARCHAR AND reviewers.years_of_experience >= %(years_of_experience_1)s::INTEGER ORDER BY reviewers.reviewer_id
+  {'reviewer_id': 64, 'full_name': 'Dana Nurlanova', 'email': 'dana.nurlanova@example.com'}
+
+=== Task 6.1 ===
+SQL: SELECT tracks.track_id, tracks.name, tracks.conference_id, count(DISTINCT papers.paper_id) AS distinct_papers, count(DISTINCT author_papers.author_id) AS distinct_authors 
+FROM tracks LEFT OUTER JOIN papers ON papers.track_id = tracks.track_id LEFT OUTER JOIN author_papers ON author_papers.paper_id = papers.paper_id GROUP BY tracks.track_id, tracks.name, tracks.conference_id ORDER BY tracks.track_id
+  {'track_id': 21, 'name': 'Applied AI', 'conference_id': 11, 'distinct_papers': 5, 'distinct_authors': 3}
+  {'track_id': 22, 'name': 'Data Engineering', 'conference_id': 11, 'distinct_papers': 5, 'distinct_authors': 3}
+  {'track_id': 23, 'name': 'Empty Track', 'conference_id': 11, 'distinct_papers': 0, 'distinct_authors': 0}
+  {'track_id': 24, 'name': 'Berlin Systems Track', 'conference_id': 12, 'distinct_papers': 0, 'distinct_authors': 0}
+
+=== Task 6.2 ===
+SQL: SELECT reviewers.reviewer_id, users.first_name || %(param_1)s::VARCHAR || users.last_name AS full_name, count(reviews.review_id) AS review_count, avg(reviews.overall_score) AS avg_score 
+FROM reviewers JOIN users ON users.user_id = reviewers.reviewer_id LEFT OUTER JOIN reviews ON reviews.reviewer_id = reviewers.reviewer_id GROUP BY reviewers.reviewer_id, users.first_name, users.last_name ORDER BY reviewers.reviewer_id
+  {'reviewer_id': 61, 'full_name': 'Arman Armanov', 'review_count': 0, 'avg_score': None}
+  {'reviewer_id': 62, 'full_name': 'Amina Aminova', 'review_count': 0, 'avg_score': None}
+  {'reviewer_id': 63, 'full_name': 'Dias Serikov', 'review_count': 0, 'avg_score': None}
+  {'reviewer_id': 64, 'full_name': 'Dana Nurlanova', 'review_count': 2, 'avg_score': Decimal('3.0000000000000000')}
+  {'reviewer_id': 69, 'full_name': 'Rustem Bekov', 'review_count': 3, 'avg_score': Decimal('3.6666666666666667')}
+  {'reviewer_id': 70, 'full_name': 'Saule Karimova', 'review_count': 0, 'avg_score': None}
+  {'reviewer_id': 71, 'full_name': 'Nurlan Smagulov', 'review_count': 3, 'avg_score': Decimal('4.3333333333333333')}
+  {'reviewer_id': 72, 'full_name': 'Kamila Zhaksylyk', 'review_count': 2, 'avg_score': Decimal('3.5000000000000000')}
+
+=== Task 6.3 ===
+SQL: SELECT conferences.conference_id, conferences.acronym, count(DISTINCT papers.paper_id) AS total_papers, count(DISTINCT CASE WHEN (papers.status = %(status_1)s::VARCHAR) THEN papers.paper_id END) AS accepted_papers, avg(anon_1.paper_avg) AS avg_review_score 
+FROM conferences LEFT OUTER JOIN tracks ON tracks.conference_id = conferences.conference_id LEFT OUTER JOIN papers ON papers.track_id = tracks.track_id LEFT OUTER JOIN (SELECT reviews.paper_id AS paper_id, avg(CAST(reviews.overall_score AS FLOAT)) AS paper_avg 
+FROM reviews GROUP BY reviews.paper_id) AS anon_1 ON anon_1.paper_id = papers.paper_id GROUP BY conferences.conference_id, conferences.acronym ORDER BY conferences.conference_id
+  {'conference_id': 11, 'acronym': 'ASC26', 'total_papers': 10, 'accepted_papers': 3, 'avg_review_score': 3.4047619047619047}
+  {'conference_id': 12, 'acronym': 'BSW26', 'total_papers': 0, 'accepted_papers': 0, 'avg_review_score': None}
+
+=== Task 6.4 ===
+SQL: WITH per_reviewer_counts AS 
+(SELECT reviewers.reviewer_id AS reviewer_id, users.first_name || %(param_1)s::VARCHAR || users.last_name AS full_name, count(reviews.review_id) AS review_count 
+FROM reviewers JOIN users ON users.user_id = reviewers.reviewer_id LEFT OUTER JOIN reviews ON reviews.reviewer_id = reviewers.reviewer_id GROUP BY reviewers.reviewer_id, users.first_name, users.last_name)
+ SELECT per_reviewer_counts.reviewer_id, per_reviewer_counts.full_name, per_reviewer_counts.review_count, (SELECT avg(CAST(per_reviewer_counts.review_count AS FLOAT)) AS avg_1 
+FROM per_reviewer_counts) AS overall_avg_reviews 
+FROM per_reviewer_counts 
+WHERE CAST(per_reviewer_counts.review_count AS FLOAT) > (SELECT avg(CAST(per_reviewer_counts.review_count AS FLOAT)) AS avg_1 
+FROM per_reviewer_counts) ORDER BY per_reviewer_counts.reviewer_id
+  {'reviewer_id': 64, 'full_name': 'Dana Nurlanova', 'review_count': 2, 'overall_avg_reviews': 1.25}
+  {'reviewer_id': 69, 'full_name': 'Rustem Bekov', 'review_count': 3, 'overall_avg_reviews': 1.25}
+  {'reviewer_id': 71, 'full_name': 'Nurlan Smagulov', 'review_count': 3, 'overall_avg_reviews': 1.25}
+  {'reviewer_id': 72, 'full_name': 'Kamila Zhaksylyk', 'review_count': 2, 'overall_avg_reviews': 1.25}
+
+=== Task 7 ===
+SQL: SELECT conferences.conference_id, conferences.acronym, count(CASE WHEN (papers.status = %(status_1)s::VARCHAR) THEN %(param_1)s::INTEGER END) AS accepted_count, count(CASE WHEN (papers.status = %(status_2)s::VARCHAR) THEN %(param_2)s::INTEGER END) AS rejected_count, CASE WHEN (count(CASE WHEN (papers.status = %(status_1)s::VARCHAR) THEN %(param_1)s::INTEGER END) + count(CASE WHEN (papers.status = %(status_2)s::VARCHAR) THEN %(param_2)s::INTEGER END) > %(param_3)s::INTEGER) THEN round(CAST((%(param_4)s * CAST(count(CASE WHEN (papers.status = %(status_1)s::VARCHAR) THEN %(param_1)s::INTEGER END) AS NUMERIC)) / CAST(CAST(count(CASE WHEN (papers.status = %(status_1)s::VARCHAR) THEN %(param_1)s::INTEGER END) + count(CASE WHEN (papers.status = %(status_2)s::VARCHAR) THEN %(param_2)s::INTEGER END) AS NUMERIC) AS NUMERIC) AS NUMERIC), %(round_1)s::INTEGER) END AS acceptance_rate_pct 
+FROM conferences LEFT OUTER JOIN tracks ON tracks.conference_id = conferences.conference_id LEFT OUTER JOIN papers ON papers.track_id = tracks.track_id GROUP BY conferences.conference_id, conferences.acronym ORDER BY conferences.conference_id
+  {'conference_id': 11, 'acronym': 'ASC26', 'accepted_count': 3, 'rejected_count': 1, 'acceptance_rate_pct': Decimal('75.00')}
+  {'conference_id': 12, 'acronym': 'BSW26', 'accepted_count': 0, 'rejected_count': 0, 'acceptance_rate_pct': None}
+
+=== Task 8 ===
+SQL: 
+        SELECT *
+        FROM accepted_paper_schedule
+        ORDER BY conference_id, session_date, start_time, session_id, paper_id;
+        
+  {'paper_id': 51, 'paper_title': 'Neural Query Cardinality Estimation', 'conference_id': 11, 'conference_acronym': 'ASC26', 'track_name': 'Data Engineering', 'session_id': 11, 'session_title': 'Keynote & Accepted Papers', 'session_date': datetime.date(2026, 6, 10), 'start_time': datetime.datetime(2026, 6, 10, 9, 0, tzinfo=datetime.timezone.utc), 'end_time': datetime.datetime(2026, 6, 10, 11, 0, tzinfo=datetime.timezone.utc), 'room_label': 'A101', 'chair_name': 'Rustem Bekov', 'corresponding_author_name': 'Arman Armanov', 'corresponding_author_email': 'arman.armanov@example.com'}
+  {'paper_id': 58, 'paper_title': 'Vector Index Compression with Product Quantization', 'conference_id': 11, 'conference_acronym': 'ASC26', 'track_name': 'Data Engineering', 'session_id': 11, 'session_title': 'Keynote & Accepted Papers', 'session_date': datetime.date(2026, 6, 10), 'start_time': datetime.datetime(2026, 6, 10, 9, 0, tzinfo=datetime.timezone.utc), 'end_time': datetime.datetime(2026, 6, 10, 11, 0, tzinfo=datetime.timezone.utc), 'room_label': 'A101', 'chair_name': 'Rustem Bekov', 'corresponding_author_name': 'Alikhan Tolegen', 'corresponding_author_email': 'alikhan.tolegen@example.com'}

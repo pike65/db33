@@ -30,6 +30,10 @@ down:
 seed:
     uv run python -m app.core.seed
 
+# Run script for Part 2
+part2:
+    uv run python -m part2.run_part2
+
 # ==========================================
 # Code Quality
 # ==========================================
