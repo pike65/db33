@@ -89,3 +89,42 @@ def update_reviewer(reviewer_id: int, payload: ReviewerUpdate, db: DBSession):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
+
+
+@router.delete(
+    "/{user_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+def delete_user(user_id: int, db: DBSession):
+    try:
+        service.delete_user_from_db(db, user_id=user_id)
+    except NotFoundError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc))
+
+
+@router.delete(
+    "/authors/{author_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+def delete_author(author_id: int, db: DBSession):
+    try:
+        service.delete_author_from_db(db, author_id=author_id)
+    except NotFoundError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc))
+
+
+@router.delete(
+    "/reviewers/{reviewer_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+def delete_reviewer(reviewer_id: int, db: DBSession):
+    try:
+        service.delete_reviewer_from_db(db, reviewer_id=reviewer_id)
+    except NotFoundError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc))

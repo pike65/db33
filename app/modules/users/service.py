@@ -237,3 +237,62 @@ def update_reviewer_in_db(
 
     db.refresh(reviewer)
     return reviewer
+
+
+def delete_user_from_db(db: Session, user_id: int) -> None:
+    user = db.get(User, user_id)
+    if not user:
+        raise NotFoundError("User not found.")
+
+    db.delete(user)
+
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise ValueError(
+            "Cannot delete user because they are referenced by active records "
+            "(such as coordinated tracks or chaired sessions)."
+        ) from None
+
+
+def delete_author_from_db(db: Session, author_id: int) -> None:
+    author = db.get(Author, author_id)
+    if not author:
+        raise NotFoundError("Author profile not found.")
+
+    if author.user.reviewer_profile is None:
+        raise ValueError(
+            "Cannot delete author profile because the user must remain at least an author or a reviewer."
+        )
+
+    db.delete(author)
+
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise ValueError(
+            "Cannot delete author profile due to active references."
+        ) from None
+
+
+def delete_reviewer_from_db(db: Session, reviewer_id: int) -> None:
+    reviewer = db.get(Reviewer, reviewer_id)
+    if not reviewer:
+        raise NotFoundError("Reviewer profile not found.")
+
+    if reviewer.user.author_profile is None:
+        raise ValueError(
+            "Cannot delete reviewer profile because the user must remain at least an author or a reviewer."
+        )
+
+    db.delete(reviewer)
+
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise ValueError(
+            "Cannot delete reviewer profile because they are still referenced (such as coordinating tracks or chairing sessions)."
+        ) from None
