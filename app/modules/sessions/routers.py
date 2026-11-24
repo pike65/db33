@@ -4,7 +4,11 @@ from sqlalchemy.exc import IntegrityError
 from app.core.exceptions import NotFoundError
 from app.database.db import DBSession
 from app.modules.sessions import service
-from app.modules.sessions.schemas import SessionCreate, SessionResponse
+from app.modules.sessions.schemas import (
+    SessionCreate,
+    SessionResponse,
+    SessionUpdate,
+)
 
 router = APIRouter(prefix="/sessions", tags=["sessions"])
 
@@ -42,3 +46,25 @@ def get_session_by_id(db: DBSession, session_id: int):
         return service.get_session_by_id_from_db(db, session_id)
     except NotFoundError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+
+
+@router.patch(
+    "/{session_id}", response_model=SessionResponse, status_code=status.HTTP_200_OK
+)
+def update_session(db: DBSession, session_id: int, payload: SessionUpdate):
+    try:
+        return service.update_session_in_db(db, session_id=session_id, data=payload)
+    except NotFoundError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
+
+
+@router.delete("/{session_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_session(db: DBSession, session_id: int):
+    try:
+        service.delete_session_from_db(db, session_id=session_id)
+    except NotFoundError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc))
