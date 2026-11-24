@@ -5,8 +5,13 @@ from app.core.exceptions import InvalidAreaError, NotFoundError
 from app.database.db import DBSession
 from app.modules.users import service
 from app.modules.users.schemas import (
+    AuthorResponse,
+    AuthorUpdate,
+    ReviewerResponse,
+    ReviewerUpdate,
     UserCreate,
     UserResponse,
+    UserUpdate,
 )
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -46,3 +51,41 @@ def get_user_by_id(db: DBSession, user_id: int):
             status_code=status.HTTP_404_NOT_FOUND,
             detail=str(exc),
         )
+
+
+@router.patch("/{user_id}", response_model=UserResponse, status_code=status.HTTP_200_OK)
+def update_user(user_id: int, payload: UserUpdate, db: DBSession):
+    try:
+        return service.update_user_in_db(db, user_id=user_id, data=payload)
+    except NotFoundError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
+
+
+@router.patch(
+    "/authors/{author_id}",
+    response_model=AuthorResponse,
+    status_code=status.HTTP_200_OK,
+)
+def update_author(author_id: int, payload: AuthorUpdate, db: DBSession):
+    try:
+        return service.update_author_in_db(db, author_id=author_id, data=payload)
+    except NotFoundError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
+
+
+@router.patch(
+    "/reviewers/{reviewer_id}",
+    response_model=ReviewerResponse,
+    status_code=status.HTTP_200_OK,
+)
+def update_reviewer(reviewer_id: int, payload: ReviewerUpdate, db: DBSession):
+    try:
+        return service.update_reviewer_in_db(db, reviewer_id=reviewer_id, data=payload)
+    except NotFoundError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))

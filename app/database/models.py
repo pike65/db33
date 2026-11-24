@@ -58,6 +58,11 @@ class Author(Base):
         back_populates="author", cascade="all, delete-orphan"
     )
 
+    # Properties
+    @property
+    def research_area_ids(self) -> list[int]:
+        return [link.research_area_id for link in self.author_research_areas]
+
 
 class AuthorResearchArea(Base):
     __tablename__ = "author_research_areas"
@@ -125,6 +130,11 @@ class Reviewer(Base):
     submitted_reviews: Mapped[list[Review]] = relationship(
         back_populates="reviewer", cascade="all, delete-orphan"
     )
+
+    # Properties
+    @property
+    def expertise_area_ids(self) -> list[int]:
+        return [link.expertise_area_id for link in self.reviewer_expertise_areas]
 
 
 class ReviewerExpertiseArea(Base):
