@@ -2,7 +2,6 @@ import sys
 from datetime import UTC, date, datetime
 
 from sqlalchemy import select, text
-from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
 from app.database.db import Base, SessionLocal, engine
@@ -27,62 +26,36 @@ from app.database.models import (
 from app.database.models import (
     Session as ConfSession,
 )
-
-RESEARCH_AREAS = [
-    "Machine Learning",
-    "Distributed Systems",
-    "Databases",
-    "Cybersecurity",
-    "Software Engineering",
-]
-
-EXPERTISE_AREAS = [
-    "Peer Review",
-    "Data Systems",
-    "Databases",
-    "Cloud & Infrastructure",
-    "Algorithms",
-    "Applied AI",
-]
+from app.modules.areas.service import (
+    EXPERTISE_AREAS,
+    RESEARCH_AREAS,
+    populate_areas_in_db,
+)
 
 
-def _seed_areas(
+def _load_areas(
     db: Session,
 ) -> tuple[dict[str, ResearchArea], dict[str, ExpertiseArea]]:
-    db.execute(
-        insert(ResearchArea)
-        .values([{"label": label} for label in RESEARCH_AREAS])
-        .on_conflict_do_nothing(index_elements=["label"])
-    )
-    db.execute(
-        insert(ExpertiseArea)
-        .values([{"label": label} for label in EXPERTISE_AREAS])
-        .on_conflict_do_nothing(index_elements=["label"])
-    )
-    db.flush()
-
-    ra_rows = db.scalars(
-        select(ResearchArea).where(ResearchArea.label.in_(RESEARCH_AREAS))
-    ).all()
-    ea_rows = db.scalars(
-        select(ExpertiseArea).where(ExpertiseArea.label.in_(EXPERTISE_AREAS))
-    ).all()
-
-    return (
-        {row.label: row for row in ra_rows},
-        {row.label: row for row in ea_rows},
-    )
+    ra_map = {r.label: r for r in db.scalars(select(ResearchArea)).all()}
+    ea_map = {e.label: e for e in db.scalars(select(ExpertiseArea)).all()}
+    missing = [x for x in RESEARCH_AREAS if x not in ra_map] + [
+        x for x in EXPERTISE_AREAS if x not in ea_map
+    ]
+    if missing:
+        raise SystemExit(
+            "Research/expertise areas are missing. Populate them first: "
+            "open /docs and call POST /populate-areas, then run the seed again."
+        )
+    return ra_map, ea_map
 
 
 def seed_database(db: Session) -> None:
     existing = db.scalar(select(User).where(User.email == "arman.armanov@example.com"))
     if existing is not None:
-        _seed_areas(db)
-        db.commit()
         return
 
-    # 1. Research areas & expertise areas
-    ra_map, ea_map = _seed_areas(db)
+    # 1. Research areas & expertise areas (created via POST /populate-areas)
+    ra_map, ea_map = _load_areas(db)
     ra_ai = ra_map["Machine Learning"]
     ra_db = ra_map["Databases"]
     ra_sec = ra_map["Cybersecurity"]
@@ -735,7 +708,9 @@ def seed_database(db: Session) -> None:
 
 
 def main() -> None:
-    if "--reset" in sys.argv:
+    reset = "--reset" in sys.argv
+
+    if reset:
         with engine.begin() as conn:
             conn.execute(text("DROP SCHEMA public CASCADE"))
             conn.execute(text("CREATE SCHEMA public"))
@@ -744,6 +719,8 @@ def main() -> None:
     Base.metadata.create_all(bind=engine)
 
     with SessionLocal() as db:
+        if reset:
+            populate_areas_in_db(db)
         seed_database(db)
     print("Database seeded.")
 

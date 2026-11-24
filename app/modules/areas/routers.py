@@ -7,6 +7,11 @@ from app.modules.areas.schemas import ExpertiseAreaResponse, ResearchAreaRespons
 router = APIRouter(prefix="/areas", tags=["areas"])
 
 
+@router.post("/populate-areas", status_code=201)
+def populate_areas(db: DBSession):
+    return service.populate_areas_in_db(db)
+
+
 @router.get(
     "/research-areas",
     response_model=list[ResearchAreaResponse],
