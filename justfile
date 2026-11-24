@@ -28,7 +28,7 @@ down:
 
 # Fill tables of DB
 seed:
-    uv run python -m app.core.seed
+    uv run python -m app.database.seed
 
 # Run script for Part 2
 part2:

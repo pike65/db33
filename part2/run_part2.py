@@ -5,7 +5,7 @@ from pathlib import Path
 from sqlalchemy import delete, select
 from sqlalchemy.dialects import postgresql
 
-from app.core.seed import seed_database
+from app.database.seed import seed_database
 from app.database.db import SessionLocal
 from app.database.models import (
     AuthorHasPaper,
