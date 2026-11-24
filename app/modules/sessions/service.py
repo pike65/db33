@@ -3,7 +3,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import NotFoundError
-from app.database.models import Conference, Reviewer
+from app.database.models import Conference, Paper, Reviewer, Track
 from app.database.models import Session as ConfSession
 from app.modules.sessions.schemas import SessionCreate, SessionUpdate
 
@@ -70,6 +70,21 @@ def update_session_in_db(
 
     if "reviewer_id" in updates:
         _check_reviewer_id(db, reviewer_id=updates["reviewer_id"])
+
+    if "conference_id" in updates and updates["conference_id"] != session.conference_id:
+        mismatch = db.scalar(
+            select(Paper.paper_id)
+            .join(Track, Track.track_id == Paper.track_id)
+            .where(
+                Paper.session_id == session.session_id,
+                Track.conference_id != updates["conference_id"],
+            )
+            .limit(1)
+        )
+        if mismatch is not None:
+            raise ValueError(
+                "Cannot move a session to another conference while papers from its current conference are assigned to it."
+            )
 
     for field, value in updates.items():
         setattr(session, field, value)

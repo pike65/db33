@@ -1,70 +1,70 @@
-# ==========================================
-# Default
-# ==========================================
-
-# List all available commands
 default:
     @just --list
 
-# ==========================================
-# Database & Docker
-# ==========================================
+# ---------- Docker (main workflow) ----------
 
-# Run DB in foreground
+# Build and start database + app in the foreground
 up:
-    docker compose up
+    docker compose up --build
 
-# Run DB in background
+# Build and start database + app in the background
 upd:
-    docker compose up -d
+    docker compose up --build -d
 
-# Stop db
+# Show app logs
+logs:
+    docker compose logs -f app
+
+# Stop containers, keep data
 stop:
     docker compose down
 
-# Stop and wipe DB volumes (use when models/tables change)
+# Stop containers and delete all data
 down:
     docker compose down -v
 
-# Fill tables of DB
+# Fill the empty database with sample data
 seed:
-    uv run python -m app.database.seed
+    docker compose exec app python -m app.database.seed
 
-# Restore original seed data (wipe + recreate + seed)
+# Wipe the database and restore the original sample data
 seed-reset:
-    uv run python -m app.database.seed --reset
+    docker compose exec app python -m app.database.seed --reset
 
-# Run script for Part 2
+# Run all Part 2 tasks and print results
 part2:
-    uv run python -m part2.run_part2
+    docker compose exec app python -m part2.run_part2
 
-# ==========================================
-# Code Quality
-# ==========================================
+# Open psql inside the database container
+psql:
+    docker exec -it db3_container psql -U neo -d db3_db
 
-# Format code with Ruff
-fmt:
-    uv run ruff format .
+# ---------- Local development (no app container) ----------
 
-# Lint and auto-fix issues with Ruff
-lint:
-    uv run ruff check . --fix
+# Start only the database
+db:
+    docker compose up -d db
 
-# Format and lint in one step
-check: fmt lint
-
-
-# ==========================================
-# Backend & Demo
-# ==========================================
-
-# Run FastAPI dev server
+# Run the API locally with auto-reload
 fast:
     uv run fastapi dev
 
-# Full stack start: boot DB in background, then start FastAPI
-dev: upd fast
+# Seed / reset / Part 2 from your local Python environment
+seed-local:
+    uv run python -m app.database.seed
 
-# Run everything in Docker (for proferssors)
-docker:
-    docker compose up --build
+seed-reset-local:
+    uv run python -m app.database.seed --reset
+
+part2-local:
+    uv run python -m part2.run_part2
+
+# ---------- Code quality ----------
+
+fmt:
+    uv run ruff format .
+
+lint:
+    uv run ruff check . --fix
+
+check: fmt lint

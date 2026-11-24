@@ -229,14 +229,6 @@ def task_6_2_reviewer_stats(db: Session):
 
 
 def task_6_3_conference_stats(db: Session):
-    paper_review_avg = (
-        select(
-            Review.paper_id.label("paper_id"),
-            func.avg(cast(Review.overall_score, Float)).label("paper_avg"),
-        )
-        .group_by(Review.paper_id)
-        .subquery()
-    )
     stmt = (
         select(
             Conference.conference_id,
@@ -245,11 +237,11 @@ def task_6_3_conference_stats(db: Session):
             func.count(
                 distinct(case((Paper.status == "accepted", Paper.paper_id)))
             ).label("accepted_papers"),
-            func.avg(paper_review_avg.c.paper_avg).label("avg_review_score"),
+            func.avg(Review.overall_score).label("avg_review_score"),
         )
         .outerjoin(Track, Track.conference_id == Conference.conference_id)
         .outerjoin(Paper, Paper.track_id == Track.track_id)
-        .outerjoin(paper_review_avg, paper_review_avg.c.paper_id == Paper.paper_id)
+        .outerjoin(Review, Review.paper_id == Paper.paper_id)
         .group_by(Conference.conference_id, Conference.acronym)
         .order_by(Conference.conference_id)
     )

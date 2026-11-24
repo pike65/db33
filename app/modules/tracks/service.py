@@ -3,7 +3,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import NotFoundError
-from app.database.models import Conference, ResearchArea, Reviewer, Track
+from app.database.models import Conference, Paper, ResearchArea, Reviewer, Track
 from app.modules.tracks.schemas import TrackUpdate
 
 
@@ -38,6 +38,17 @@ def update_track_in_db(db: Session, track_id: int, data: TrackUpdate) -> Track:
 
     if "reviewer_id" in updates and not db.get(Reviewer, updates["reviewer_id"]):
         raise NotFoundError("Reviewer not found.")
+
+    if "conference_id" in updates and updates["conference_id"] != track.conference_id:
+        scheduled = db.scalar(
+            select(Paper.paper_id)
+            .where(Paper.track_id == track.track_id, Paper.session_id.is_not(None))
+            .limit(1)
+        )
+        if scheduled is not None:
+            raise ValueError(
+                "Cannot move a track to another conference while its papers are assigned to sessions."
+            )
 
     for field, value in updates.items():
         setattr(track, field, value)

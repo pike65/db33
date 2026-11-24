@@ -95,10 +95,9 @@ FROM reviewers JOIN users ON users.user_id = reviewers.reviewer_id LEFT OUTER JO
   {'reviewer_id': 72, 'full_name': 'Kamila Zhaksylyk', 'review_count': 2, 'avg_score': Decimal('3.5000000000000000')}
 
 === Task 6.3 ===
-SQL: SELECT conferences.conference_id, conferences.acronym, count(DISTINCT papers.paper_id) AS total_papers, count(DISTINCT CASE WHEN (papers.status = %(status_1)s::VARCHAR) THEN papers.paper_id END) AS accepted_papers, avg(anon_1.paper_avg) AS avg_review_score 
-FROM conferences LEFT OUTER JOIN tracks ON tracks.conference_id = conferences.conference_id LEFT OUTER JOIN papers ON papers.track_id = tracks.track_id LEFT OUTER JOIN (SELECT reviews.paper_id AS paper_id, avg(CAST(reviews.overall_score AS FLOAT)) AS paper_avg 
-FROM reviews GROUP BY reviews.paper_id) AS anon_1 ON anon_1.paper_id = papers.paper_id GROUP BY conferences.conference_id, conferences.acronym ORDER BY conferences.conference_id
-  {'conference_id': 11, 'acronym': 'ASC26', 'total_papers': 10, 'accepted_papers': 3, 'avg_review_score': 3.4047619047619047}
+SQL: SELECT conferences.conference_id, conferences.acronym, count(DISTINCT papers.paper_id) AS total_papers, count(DISTINCT CASE WHEN (papers.status = %(status_1)s::VARCHAR) THEN papers.paper_id END) AS accepted_papers, avg(reviews.overall_score) AS avg_review_score 
+FROM conferences LEFT OUTER JOIN tracks ON tracks.conference_id = conferences.conference_id LEFT OUTER JOIN papers ON papers.track_id = tracks.track_id LEFT OUTER JOIN reviews ON reviews.paper_id = papers.paper_id GROUP BY conferences.conference_id, conferences.acronym ORDER BY conferences.conference_id
+  {'conference_id': 11, 'acronym': 'ASC26', 'total_papers': 10, 'accepted_papers': 3, 'avg_review_score': Decimal('3.7000000000000000')}
   {'conference_id': 12, 'acronym': 'BSW26', 'total_papers': 0, 'accepted_papers': 0, 'avg_review_score': None}
 
 === Task 6.4 ===
