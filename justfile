@@ -30,6 +30,10 @@ down:
 seed:
     uv run python -m app.database.seed
 
+# Restore original seed data (wipe + recreate + seed)
+seed-reset:
+    uv run python -m app.database.seed --reset
+
 # Run script for Part 2
 part2:
     uv run python -m part2.run_part2
@@ -60,3 +64,7 @@ fast:
 
 # Full stack start: boot DB in background, then start FastAPI
 dev: upd fast
+
+# Run everything in Docker (for proferssors)
+docker:
+    docker compose up --build

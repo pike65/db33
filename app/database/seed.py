@@ -1,10 +1,11 @@
+import sys
 from datetime import UTC, date, datetime
 
-from sqlalchemy import select
+from sqlalchemy import select, text
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
-from app.database.db import SessionLocal
+from app.database.db import Base, SessionLocal, engine
 from app.database.models import (
     Author,
     AuthorHasPaper,
@@ -734,6 +735,14 @@ def seed_database(db: Session) -> None:
 
 
 def main() -> None:
+    if "--reset" in sys.argv:
+        with engine.begin() as conn:
+            conn.execute(text("DROP SCHEMA public CASCADE"))
+            conn.execute(text("CREATE SCHEMA public"))
+        print("Database wiped.")
+
+    Base.metadata.create_all(bind=engine)
+
     with SessionLocal() as db:
         seed_database(db)
     print("Database seeded.")

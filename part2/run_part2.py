@@ -5,7 +5,6 @@ from pathlib import Path
 from sqlalchemy import delete, select
 from sqlalchemy.dialects import postgresql
 
-from app.database.seed import seed_database
 from app.database.db import SessionLocal
 from app.database.models import (
     AuthorHasPaper,
@@ -21,6 +20,7 @@ from app.database.models import (
     User,
 )
 from app.database.models import Session as ConfSession
+from app.database.seed import seed_database
 from part2 import queries
 
 
