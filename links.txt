@@ -1,0 +1,10 @@
+Assignment 3 - Daryn Imash (individual submission)
+
+Video presentation (Google Drive):
+-- google video link --
+
+Deployed application (Swagger UI):
+-- application url ---
+
+Demo account credentials:
+None required (no authentication in this application).
